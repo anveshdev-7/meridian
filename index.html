@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian - AI Assistant</title>
+<style>
+:root{--bg:#eceef2;--side:#e3e6ec;--surf:#fff;--ink:#141821;--mute:#5d6678;--line:#d3d8e1;--acc:#27437f;--acc-ink:#fff;--hover:#d9dde6;--code:#f2f4f8;color-scheme:light}
+:root[data-theme=dark]{--bg:#0e1116;--side:#141820;--surf:#181d26;--ink:#e8ebf2;--mute:#8e98ac;--line:#262d3a;--acc:#9bb3ea;--acc-ink:#0e1116;--hover:#1e2430;--code:#10141b;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.logo{display:flex;align-items:center;gap:10px;font-weight:650;font-size:17px;letter-spacing:-.01em}
+.logo svg{width:28px;height:28px}
+aside{width:280px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;gap:14px;flex:none;transition:transform .2s}
+.new{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;background:var(--acc);color:var(--acc-ink);font-weight:600}
+.hist{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.hist h3{font-size:12px;font-weight:600;color:var(--mute);padding:6px 10px}
+.item{display:flex;align-items:center;gap:4px;border-radius:8px}
+.item:hover,.item.on{background:var(--hover)}
+.item .t{flex:1;text-align:left;padding:8px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .d{padding:8px;color:var(--mute);opacity:0;border-radius:6px}
+.item:hover .d,.item .d:focus-visible{opacity:1}
+.item .d:hover{color:var(--ink)}
+.empty-h{padding:8px 10px;color:var(--mute);font-size:13px}
+.foot{border-top:1px solid var(--line);padding-top:10px}
+.row{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;color:var(--ink)}
+.row:hover{background:var(--hover)}
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+header{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--line)}
+header .ttl{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{padding:8px;border-radius:8px;display:grid;place-items:center}
+.ib:hover{background:var(--hover)}
+#menu{display:none}
+#scroll{flex:1;overflow:auto}
+.wrap{max-width:760px;margin:0 auto;padding:24px 20px}
+.hero{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:40px 20px}
+.hero .wrap{padding:0;width:100%}
+.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.12;letter-spacing:-.025em;font-weight:680;max-width:15em}
+.hero p{color:var(--mute);margin:14px 0 28px;max-width:34em}
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.chip{text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surf);line-height:1.4}
+.chip:hover{border-color:var(--acc)}
+.chip b{display:block;font-weight:600;margin-bottom:2px}
+.chip span{color:var(--mute);font-size:13.5px}
+.msg{display:flex;gap:14px;padding:14px 0}
+.av{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;margin-top:2px}
+.msg.user .av{background:var(--hover);color:var(--ink)}
+.msg.assistant .av{background:var(--acc);color:var(--acc-ink)}
+.body{flex:1;min-width:0;overflow-wrap:anywhere}
+.msg.user .body{white-space:pre-wrap}
+.body p+p,.body p+ul,.body p+ol,.body ul+p,.body ol+p,.body pre+p,.body p+pre{margin-top:10px}
+.body ul,.body ol{padding-left:22px}
+.body code{background:var(--code);border:1px solid var(--line);padding:1px 5px;border-radius:4px;font:13px ui-monospace,Menlo,Consolas,monospace}
+.body pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;margin-top:10px}
+.body pre code{border:0;padding:0;background:none}
+.err{color:#b3261e;font-size:14px;margin-top:6px}
+:root[data-theme=dark] .err{color:#f2a29b}
+.acts{display:flex;gap:2px;margin-top:6px;color:var(--mute)}
+.acts .ib{padding:5px}
+.dots{display:inline-flex;gap:4px;padding:6px 0}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:b 1.1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.comp{padding:0 20px 18px}
+.box{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 16px}
+.box:focus-within{border-color:var(--acc)}
+textarea{flex:1;resize:none;border:0;outline:0;background:none;color:var(--ink);font:inherit;max-height:180px;padding:7px 0}
+textarea::placeholder{color:var(--mute)}
+#go{width:36px;height:36px;border-radius:8px;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center}
+#go:disabled{opacity:.4;cursor:not-allowed}
+.note{text-align:center;font-size:12px;color:var(--mute);margin-top:8px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surf);color:var(--ink);padding:0;width:min(480px,92vw);margin:auto}
+dialog::backdrop{background:rgba(10,12,18,.5)}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);font-weight:650;font-size:16px}
+.db{padding:20px;display:flex;flex-direction:column;gap:18px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+label small{font-weight:400;color:var(--mute)}
+select,input[type=text],.db textarea{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:9px 10px;font:inherit}
+.db textarea{min-height:90px;resize:vertical}
+input[type=range]{accent-color:var(--acc)}
+.df{display:flex;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--line)}
+.btn{padding:9px 16px;border-radius:8px;font-weight:600;border:1px solid var(--line)}
+.btn:hover{background:var(--hover)}
+.btn.p{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.btn.p:hover{background:var(--acc)}
+@media(max-width:800px){
+ aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);width:min(300px,86vw)}
+ aside.open{transform:none}
+ #menu{display:grid}
+ .chips{grid-template-columns:1fr}
+ header{padding:10px 12px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+ <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></symbol>
+ <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+ <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6M10 11v6M14 11v6"/></symbol>
+ <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+ <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+ <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+ <symbol id="i-mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--acc)" stroke="none"/><path d="M7 23V10l9 9 9-9v13" stroke="var(--acc-ink)" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<aside id="side">
+ <div class="logo"><svg><use href="#i-mark"/></svg>Meridian</div>
+ <button class="new" id="new"><svg class="i"><use href="#i-plus"/></svg>New chat</button>
+ <nav class="hist" id="hist" aria-label="Chat history"></nav>
+ <div class="foot">
+  <button class="row" id="openSet"><svg class="i"><use href="#i-gear"/></svg>Settings</button>
+  <button class="row" id="theme2"><svg class="i" id="themeIc"><use href="#i-moon"/></svg><span id="themeTx">Dark mode</span></button>
+ </div>
+</aside>
+
+<main>
+ <header>
+  <button class="ib" id="menu" aria-label="Open sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
+  <div class="ttl" id="ttl">New chat</div>
+  <button class="ib" id="theme" aria-label="Toggle theme"><svg class="i" id="themeIc2"><use href="#i-moon"/></svg></button>
+ </header>
+ <div id="scroll"></div>
+ <div class="comp">
+  <div class="box">
+   <textarea id="in" rows="1" placeholder="Message Meridian" aria-label="Message"></textarea>
+   <button id="go" aria-label="Send"><svg class="i" id="goIc"><use href="#i-send"/></svg></button>
+  </div>
+  <div class="note">Responses can contain mistakes. Check important information.</div>
+ </div>
+</main>
+
+<dialog id="dlg">
+ <div class="dh">Settings<button class="ib" id="closeSet" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+ <div class="db">
+  <label>Model
+   <select id="sModel">
+    <option value="openai/gpt-oss-120b">GPT-OSS 120B</option>
+   </select>
+  </label>
+  <label>Creativity: <span id="tv"></span><input type="range" id="sTemp" min="0" max="1.5" step="0.1"><small>Lower is more precise, higher is more varied.</small></label>
+  <label>Instructions<small>Sets how the assistant behaves in every chat.</small><textarea id="sSys"></textarea></label>
+ </div>
+ <div class="df">
+  <button class="btn" id="clearAll">Delete all chats</button>
+  <button class="btn p" id="save">Save changes</button>
+ </div>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let chats=store.get('mr.chats',[]),cur=null,busy=false,ctrl=null;
+let st={model:'openai/gpt-oss-120b',temperature:0.7,system:'You are Meridian, a clear and helpful assistant. Be concise and accurate.',...store.get('mr.settings',{})};
+const save=()=>store.set('mr.chats',chats);
+if(st.model!=='openai/gpt-oss-120b')st.model='openai/gpt-oss-120b';
+
+/* theme */
+function setTheme(t){
+ document.documentElement.dataset.theme=t;store.set('mr.theme',t);
+ const n=t==='dark'?'sun':'moon';
+ $('#themeIc use').setAttribute('href','#i-'+n);$('#themeIc2 use').setAttribute('href','#i-'+n);
+ $('#themeTx').textContent=t==='dark'?'Light mode':'Dark mode';
+}
+const toggle=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+setTheme(store.get('mr.theme',matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+$('#theme').onclick=$('#theme2').onclick=toggle;
+
+/* markdown (minimal) */
+function md(t){
+ return t.split('```').map((p,i)=>{
+  if(i%2){const n=p.indexOf('\n');return `<pre><code>${esc((n>=0?p.slice(n+1):p).replace(/\n$/,''))}</code></pre>`}
+  const h=esc(p).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  return h.split(/\n{2,}/).filter(b=>b.trim()).map(b=>{
+   if(/^\s*[-*] /.test(b))return '<ul>'+b.split('\n').map(l=>'<li>'+l.replace(/^\s*[-*] /,'')+'</li>').join('')+'</ul>';
+   if(/^\s*\d+\. /.test(b))return '<ol>'+b.split('\n').map(l=>'<li>'+l.replace(/^\s*\d+\. /,'')+'</li>').join('')+'</ol>';
+   return '<p>'+b.replace(/\n/g,'<br>')+'</p>'}).join('');
+ }).join('');
+}
+
+/* history */
+function renderHist(){
+ const h=$('#hist');
+ if(!chats.length){h.innerHTML='<div class="empty-h">Your conversations will appear here.</div>';return}
+ h.innerHTML='<h3>Recent</h3>'+chats.map(c=>`<div class="item ${cur&&cur.id===c.id?'on':''}"><button class="t" data-open="${c.id}">${esc(c.title)}</button><button class="d" data-del="${c.id}" aria-label="Delete chat">${ic('trash')}</button></div>`).join('');
+}
+$('#hist').onclick=e=>{
+ const o=e.target.closest('[data-open]'),d=e.target.closest('[data-del]');
+ if(o){if(busy)stop();cur=chats.find(c=>c.id===o.dataset.open);draw();$('#side').classList.remove('open')}
+ if(d){chats=chats.filter(c=>c.id!==d.dataset.del);if(cur&&cur.id===d.dataset.del){cur=null;if(busy)stop()}save();draw()}
+};
+$('#new').onclick=()=>{if(busy)stop();cur=null;draw();$('#side').classList.remove('open');$('#in').focus()};
+
+/* chat view */
+const SUG=[['Explain a concept','How does public-key cryptography work, in plain terms?'],['Write code','Write a Python function that merges overlapping intervals.'],['Draft a message','Draft a polite email asking a client for a payment update.'],['Plan something','Help me plan a three-day study schedule for an exam.']];
+function msgHTML(m,i,last){
+ const isA=m.role==='assistant';
+ const body=isA?(m.content?md(m.content):(m.error?'':'<span class="dots"><i></i><i></i><i></i></span>')):esc(m.content);
+ return `<div class="msg ${m.role}"><div class="av">${isA?'M':'Y'}</div><div class="body">${body}${m.error?`<div class="err">${esc(m.error)}</div>`:''}${isA&&m.content&&!(busy&&last)?`<div class="acts"><button class="ib" data-copy="${i}" aria-label="Copy">${ic('copy')}</button></div>`:''}</div></div>`;
+}
+function draw(){
+ renderHist();
+ $('#ttl').textContent=cur?cur.title:'New chat';
+ const sc=$('#scroll');
+ if(!cur||!cur.messages.length){
+  sc.innerHTML=`<div class="hero"><div class="wrap"><h1>Ask anything. Get a clear answer.</h1><p>Meridian helps you write, code, learn and think through problems. Pick a starting point or type your own question.</p><div class="chips">${SUG.map((s,i)=>`<button class="chip" data-s="${i}"><b>${s[0]}</b><span>${s[1]}</span></button>`).join('')}</div></div></div>`;
+ }else{
+  sc.innerHTML='<div class="wrap">'+cur.messages.map((m,i)=>msgHTML(m,i,i===cur.messages.length-1)).join('')+'</div>';
+  sc.scrollTop=sc.scrollHeight;
+ }
+ btn();
+}
+function btn(){
+ $('#goIc use').setAttribute('href',busy?'#i-stop':'#i-send');
+ $('#go').setAttribute('aria-label',busy?'Stop':'Send');
+}
+$('#scroll').onclick=e=>{
+ const s=e.target.closest('[data-s]');if(s)return send(SUG[s.dataset.s][1]);
+ const c=e.target.closest('[data-copy]');
+ if(c){navigator.clipboard?.writeText(cur.messages[c.dataset.copy].content);c.innerHTML=ic('check');setTimeout(()=>c.innerHTML=ic('copy'),1200)}
+};
+
+/* send */
+function stop(){ctrl&&ctrl.abort()}
+async function send(text){
+ text=text.trim();if(!text||busy)return;
+ if(!cur){cur={id:Date.now().toString(36),title:text.length>42?text.slice(0,42)+'...':text,messages:[]};chats.unshift(cur)}
+ cur.messages.push({role:'user',content:text});
+ const a={role:'assistant',content:''};cur.messages.push(a);
+ busy=true;ctrl=new AbortController();draw();
+ const payload=[{role:'system',content:st.system},...cur.messages.slice(0,-1).map(m=>({role:m.role,content:m.content}))];
+ try{
+  const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify({model:st.model,temperature:st.temperature,messages:payload})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Request failed ('+r.status+').')}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  const bodies=()=>{const all=document.querySelectorAll('.msg.assistant .body');return all[all.length-1]};
+  while(true){
+   const{done,value}=await rd.read();if(done)break;
+   buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop();
+   for(const l of lines){if(!l.startsWith('data:'))continue;const d=l.slice(5).trim();if(d==='[DONE]')continue;try{a.content+=JSON.parse(d).choices?.[0]?.delta?.content||''}catch{}}
+   const b=bodies();if(b){b.innerHTML=md(a.content);const sc=$('#scroll');sc.scrollTop=sc.scrollHeight}
+  }
+  if(!a.content)a.error='The model returned an empty response. Try again.';
+ }catch(e){if(e.name!=='AbortError')a.error=e.message||'Something went wrong. Check your connection and try again.'}
+ if(!a.content&&!a.error){cur.messages.pop()}
+ busy=false;save();draw();
+}
+$('#go').onclick=()=>{if(busy)return stop();const v=$('#in').value;$('#in').value='';fit();send(v)};
+$('#in').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#go').click()}});
+const fit=()=>{const t=$('#in');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,180)+'px'};
+$('#in').addEventListener('input',fit);
+
+/* settings */
+const dlg=$('#dlg');
+$('#openSet').onclick=()=>{$('#sModel').value=st.model;$('#sTemp').value=st.temperature;$('#tv').textContent=st.temperature;$('#sSys').value=st.system;dlg.showModal();$('#side').classList.remove('open')};
+$('#closeSet').onclick=()=>dlg.close();
+$('#sTemp').oninput=e=>$('#tv').textContent=e.target.value;
+$('#save').onclick=()=>{st={model:$('#sModel').value,temperature:+$('#sTemp').value,system:$('#sSys').value.trim()||st.system};store.set('mr.settings',st);dlg.close()};
+$('#clearAll').onclick=()=>{if(confirm('Delete all saved chats? This cannot be undone.')){if(busy)stop();chats=[];cur=null;save();dlg.close();draw()}};
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+$('#menu').onclick=()=>$('#side').classList.toggle('open');
+draw();
+</script>
+</body>
+</html>
