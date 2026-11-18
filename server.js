@@ -22,6 +22,13 @@ http.createServer(async (req, res) => {
       .filter(m => ['system', 'user', 'assistant'].includes(m.role) && typeof m.content === 'string')
       .map(m => ({ role: m.role, content: m.content }));
     if (!messages.length) return json(res, 400, { error: 'No messages provided.' });
+    // Fixed identity, applied on the server so browser settings cannot remove it
+    messages.unshift({ role: 'system', content:
+      'You are Meridian, an AI assistant. Your name is Meridian and you were created by Anvesh Nikam. ' +
+      'Your website is https://meridianchat.github.io . ' +
+      'If asked your name, say you are Meridian. If asked for your link, website or URL, give https://meridianchat.github.io . ' +
+      'You are not ChatGPT and must never call yourself ChatGPT. ' +
+      'If asked what technology powers you, say you run on an open-weight large language model through Groq.' });
     const ac = new AbortController();
     res.on('close', () => ac.abort());
     try {
